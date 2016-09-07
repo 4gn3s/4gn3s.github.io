@@ -1,0 +1,24 @@
+a {
+    color: #024959;
+}
+
+a:hover {
+    color: #F24C27;
+}
+
+.tag-cloud a {
+    background-color: #024959;
+}
+
+.tag-cloud a:hover {
+    background-color: #F24C27;
+}
+
+a.btn {
+    background-color: #024959;
+}
+
+a.btn:hover {
+    color: white;
+    background-color: #F24C27;
+}

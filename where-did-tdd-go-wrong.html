@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" type="text/css" href="/theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="/theme/pygments/monokai.min.css">
+  <link rel="stylesheet" type="text/css" href="/theme/font-awesome/css/font-awesome.min.css">
+
+    <link href="/static/custom.css" rel="stylesheet">
+
+
+
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index, follow" />
+
+    <!-- Chrome, Firefox OS and Opera -->
+    <meta name="theme-color" content="#333">
+    <!-- Windows Phone -->
+    <meta name="msapplication-navbutton-color" content="#333">
+    <!-- iOS Safari -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<meta name="author" content="Agnieszka Kramarek" />
+<meta name="description" content="I have recently watched a very interesting talk given by Ian Cooper about the flaws of TDD. You can watch the whole talk here. Below are my notes taken while watching. Test behaviours, not implementations A better TDD definition New piece of behaviour means we should write a test What ..." />
+<meta name="keywords" content="testing, TDD, programming">
+<meta property="og:site_name" content="4gn3s coding"/>
+<meta property="og:title" content="Where did TDD go wrong"/>
+<meta property="og:description" content="I have recently watched a very interesting talk given by Ian Cooper about the flaws of TDD. You can watch the whole talk here. Below are my notes taken while watching. Test behaviours, not implementations A better TDD definition New piece of behaviour means we should write a test What ..."/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="/where-did-tdd-go-wrong.html"/>
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2016-09-06 18:00:00+02:00"/>
+<meta property="article:modified_time" content=""/>
+<meta property="article:author" content="/author/agnieszka-kramarek.html">
+<meta property="article:section" content="Programming videos"/>
+<meta property="article:tag" content="testing"/>
+<meta property="article:tag" content="TDD"/>
+<meta property="article:tag" content="programming"/>
+<meta property="og:image" content="">
+  <title>4gn3s coding &ndash; Where did TDD go wrong</title>
+</head>
+<body>
+  <aside>
+    <div>
+      <a href="">
+        <img src="/theme/img/profile.png" alt="" title="">
+      </a>
+      <h1><a href=""></a></h1>
+      <nav>
+        <ul class="list">
+          <li><a href="/pages/about.html#about">About</a></li>
+        </ul>
+      </nav>
+      <ul class="social">
+        <li><a class="sc-facebook" href="https://www.facebook.com/agnieszka.kramarek" target="_blank"><i class="fa fa-facebook"></i></a></li>
+        <li><a class="sc-github" href="https://github.com/4gn3s" target="_blank"><i class="fa fa-github"></i></a></li>
+        <li><a class="sc-linkedin" href="" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+      </ul>
+    </div>
+  </aside>
+  <main>
+    <nav>
+      <a href="">Home</a>
+      <a href="/archives.html">Archives</a>
+      <a href="/categories.html">Categories</a>
+      <a href="/tags.html">Tags</a>
+    </nav>
+
+<article>
+  <header>
+    <h1 id="where-did-tdd-go-wrong">Where did TDD go wrong</h1>
+    <p>Posted on wto 06 wrzesień 2016 in <a href="/category/programming-videos.html">Programming videos</a></p>
+  </header>
+  <div>
+    <p>I have recently watched a very interesting talk given by Ian Cooper about the flaws of TDD. You can watch the whole talk <a href="https://vimeo.com/68375232">here</a>. Below are my notes taken while watching.</p>
+<h2>Test behaviours, not implementations</h2>
+<h4>A better TDD definition</h4>
+<p>New piece of <strong>behaviour</strong> means we should write a test</p>
+<h4>What is a unit test?</h4>
+<p>A unit test shouldn't have any side results; each test should run isolately from other tests. This does not mean that everything should be mocked out! Mocking out too much functionality creates over-implemented tests.</p>
+<h3>When refactoring / changing internal implementation, no tests should fail.</h3>
+<h2>Tips for writing awesome tests:</h2>
+<ul>
+<li>Don't jump too early into implementation details</li>
+<li>Only test the public (narrow) interface</li>
+<li>Write tests against use-cases. Pros:<ul>
+<li>less tests</li>
+<li>testing only core module functionality</li>
+</ul>
+</li>
+<li>Give tests names which indicate what is being tested</li>
+<li>Focus on making the test pass as quickly as you can. You can try to engineer it later</li>
+<li>Don't mock the internals, privates and adapters</li>
+<li>Mock other public interfaces and other ports</li>
+<li>Use the builder pattern</li>
+<li>Add integration tests to test port-adapter communication</li>
+</ul>
+<h2>A recommended development routine:</h2>
+<ol>
+<li>Write a test for new behaviour and make it fail</li>
+<li>Make the test pass without much engineering or architectual work</li>
+<li>Refactor and clean the code<ul>
+<li>Do <strong>NOT</strong> write any more tests at this point! (they would be testing the implementation)</li>
+</ul>
+</li>
+</ol>
+<h3>The builder pattern</h3>
+<p>Using builders in the tests makes tests concise and clean. A builder returns a well build (ready) object; to test some of it's properties, we can override them for particular tests.</p>
+<h4>Software testing reversed ice cream cone</h4>
+<p><img alt="Ice cream cone" src="/images/tests.png" style="width: 640px; height: auto; max-width: 100%;"/></p>
+  </div>
+  <div class="tag-cloud">
+    <p>
+      <a href="/tag/testing.html">testing</a>
+      <a href="/tag/tdd.html">TDD</a>
+      <a href="/tag/programming.html">programming</a>
+    </p>
+  </div>
+</article>
+
+    <footer>
+        <p>&copy; Agnieszka Kramarek </p>
+<p>Built using <a href="http://getpelican.com" target="_blank">Pelican</a> - <a href="https://github.com/alexandrevicenzi/flex" target="_blank">Flex</a> theme by <a href="http://alexandrevicenzi.com" target="_blank">Alexandre Vicenzi</a></p>    </footer>
+  </main>
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " 4gn3s coding ",
+  "url" : "",
+  "image": "",
+  "description": ""
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "name": "Where did TDD go wrong",
+  "headline": "Where did TDD go wrong",
+  "datePublished": "2016-09-06 18:00:00+02:00",
+  "dateModified": "",
+  "author": {
+    "@type": "Person",
+    "name": "Agnieszka Kramarek",
+    "url": "/author/agnieszka-kramarek.html"
+  },
+  "image": "{{ SITEURL }}/{{ THEME_STATIC_DIR }}/img/profile.png",
+  "url": "/where-did-tdd-go-wrong.html",
+  "description": "I have recently watched a very interesting talk given by Ian Cooper about the flaws of TDD. You can watch the whole talk here. Below are my notes taken while watching. Test behaviours, not implementations A better TDD definition New piece of behaviour means we should write a test What ..."
+}
+</script></body>
+</html>
