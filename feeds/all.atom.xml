@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>4gn3s coding</title><link href="https://4gn3s.github.io/" rel="alternate"></link><link href="https://4gn3s.github.io/feeds/all.atom.xml" rel="self"></link><id>https://4gn3s.github.io/</id><updated>2016-09-07T18:00:00+02:00</updated><entry><title>Monadic nirvana</title><link href="https://4gn3s.github.io/monadic-nirvana.html" rel="alternate"></link><published>2016-09-07T18:00:00+02:00</published><author><name>Agnieszka Kramarek</name></author><id>tag:4gn3s.github.io,2016-09-07:monadic-nirvana.html</id><summary type="html">&lt;p&gt;The following article, written in polish, consists of my notes taken while studying monads from "monads for the curious programmer series":&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://bartoszmilewski.com/2011/01/09/monads-for-the-curious-programmer-part-1/"&gt;http://bartoszmilewski.com/2011/01/09/monads-for-the-curious-programmer-part-1/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://bartoszmilewski.com/2011/03/14/monads-for-the-curious-programmer-part-2/"&gt;http://bartoszmilewski.com/2011/03/14/monads-for-the-curious-programmer-part-2/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://bartoszmilewski.com/2011/03/17/monads-for-the-curious-programmer-part-3/"&gt;http://bartoszmilewski.com/2011/03/17/monads-for-the-curious-programmer-part-3/&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I highly recommend all programmers to read the articles, they forever changed how I think about programming.&lt;/p&gt;
+&lt;h1&gt;Monady - droga do oświecenia&lt;/h1&gt;
+&lt;h2&gt;Po co to komu&lt;/h2&gt;
+&lt;p&gt;W programowaniu funkcjnym wywołanie funkcji z takimi samymi argumentami musi zawsze zwrócić ten sam wynik. Kompilator wykrywa taką sytuację i zapamiętuje wynik za pierwszym razem, żeby skrócić czas obliczeń. Obliczenia ze stanem mogą zwrócić inny wynik podczas każdego wywołania, np. poprzez dostęp do zmiennej globalnej albo zmiennych statycznych, które mogą być dodatkowo modyfikowane wewnątrz tych obliczeń, powodując powstanie efektów ubocznych.
+W programowaniu często napotykamy na problemy, których nie da się w naturalny sposób przetłumaczyć na język funkcyjny. Wtedy najlepiej użyć programowania imperatywnego.
+Monady umożliwiają elegancką implementację stanów, mutowalności, IO i innych za pomocą programowania funkcyjnego. Monady nie zabraniają powstawania skutków ubocznych funkcji ani dzielenia danych między wątkami, ale jednocześnie, dzięki systemowi typów, umożliwiają kompilatorowi sprawdzenie poprawności.&lt;/p&gt;
+&lt;h2&gt;Wstęp matematyczny&lt;/h2&gt;
+&lt;h3&gt;Teoria kategorii&lt;/h3&gt;
+&lt;p&gt;&lt;em&gt;Obiekt&lt;/em&gt; - generalizacja zbioru.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Morfizm&lt;/em&gt; - generalizacja funkcji.&lt;/p&gt;
+&lt;p&gt;Morfizm przeprowadza jeden obiekt na inny. Np. sin przeprowadza zbiór liczb R na zbiór R. Ale można także zdefiniować funkcję jestPierwsza która przeprowadza zbiór Z na Bool, albo funkcję cena która przeprowadza zbiór produktów na zbiów liczb.
+Morfizmy można składać, tzn. jeśli A -&amp;gt; B oraz B -&amp;gt; C, to A -&amp;gt; C.
+Ponadto dla każdego obiektu musi istnieć specjalny morfizm (identyczność), który przeprowadza ten obiekt na siebie.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Kategoria&lt;/em&gt; - zbiór obiektów i morfizmów.&lt;/p&gt;
+&lt;h5&gt;Kategorie a Haskell&lt;/h5&gt;
+&lt;p&gt;Hask to haskellowa kategoria typów i funkcji.
+Mamy skończony zbiór typów podstawowych (Bool, Int) oraz nieskończony zbiór typów pochodnych ([Int], Int -&amp;gt; Bool, itd).
+Typ w Hask to po prostu zbiór wartości. Np typ Char to zbiór {'a', 'b', ...}.
+Zatem w Hask typy to obiekty, a funkcje to morfizmy, funkcja mapuje jeden typ na inny (funkcje wielu parametrów można opisać w ten sposób za pomocą currying'u).&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Esencją programowania jest możliwość składania programów z mniejszych części, a tych części z jeszcze mniejszych części.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Funktor&lt;/em&gt; to mapa z jednej kategorii do innej; funktor przeprowadza obiekty w obiekty oraz morfizmy w morfizmy. Musi przy tym zachować następujące ograniczenia:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;morfizm między dwoma obiektami pierwszej kategorii musi być przemapowany na morfizm między odpowiadającymi im obiektami z drugiej kategorii. (jeśli mamy obiekt &lt;em&gt;A&lt;/em&gt; mapowany na &lt;em&gt;F(A)&lt;/em&gt; oraz &lt;em&gt;B&lt;/em&gt; mapowany na &lt;em&gt;F(B)&lt;/em&gt; i funkcję &lt;em&gt;f : A -&amp;gt; B&lt;/em&gt;, to &lt;em&gt;f&lt;/em&gt; jest mapowana na &lt;em&gt;F(f) : F(A) -&amp;gt; F(B))&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;morfizmy nadal powinny zachować swoje zasady składania: jeśli &lt;em&gt;h&lt;/em&gt; jest złożeniem &lt;em&gt;f&lt;/em&gt; i &lt;em&gt;g&lt;/em&gt;, to &lt;em&gt;F(h)&lt;/em&gt; musi być złożeniem &lt;em&gt;F(f)&lt;/em&gt; i &lt;em&gt;F(g)&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5&gt;Funktor w Hask&lt;/h5&gt;
+&lt;p&gt;Zdefiniujmy funktor w Hask, który mapuje Hask na siebie (to jest endofunktor). Obiekt w Hask to typ, więc funktor mapuje typ na typ. To znaczy, że funktor w Hask tworzy jeden typ z drugiego- czyli jest &lt;em&gt;konstruktorem typu&lt;/em&gt; (type constructor). Konstruktor typu tworzy nowy typ w programie z typu, który już istniał w Hask. Np. konstruktor listy: Int jest mapowany na [Int] (mapa nie jest zdefiniowana na wartościach). Nowy typ nie jest dodawany do Hask, bo lista już tam istniała.
+Co z mapowaniem funkcji? To jest dokładnie funkcja &lt;em&gt;map&lt;/em&gt; z haskella.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Najważniejsza własność programowania to możliwość ponownego wykorzystania kodu. Mamy funkcję, która działa na Int, to z użyciem map mamy też za darmo funkcję, która działa na [Int].&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Endofunktor&lt;/em&gt; - funktor który przeprowadza kategorię na nią samą.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Monada&lt;/em&gt; - endofunktor i dwie rodziny morfizmów: unit i join.
+Funktor mapuje obiekty (tutaj typy, czyli zbiory wartości). Funktor nie widzi co jest w środku w obiekcie- to wie morfizm. Morfizm to funkcja, która mapuje wartości jednego typu na wartości innego typu. Nasze funktory zwykle mapują uboższe typy na bogatsze.
+Unit bierze wartość uboższego typu i przypisuje jej analogiczną wartość wyższego typu. Np. dla True to będzie [True], dla 5 to [5].
+Join usuwa jedną warstwę list poprzez spłaszczenie. Np. dla [[a,b], [c], [d,e]] zwróci [a,b,c,d,e].&lt;/p&gt;
+&lt;p&gt;Ten przykład opisywał monadę listy.&lt;/p&gt;
+&lt;h2&gt;Problemy programowania fukncyjnego&lt;/h2&gt;
+&lt;p&gt;Funkcja zawsze zwraca te same wyniki dla wywowałania z takimi samymi argumentami.
+Często nie da się w ten sposób opisać zadań programistycznych- powinniśmy mówić o nich raczej jako o procedurach z efektami ubocznymi (np. funkcje rzucające wyjątki, interaktywny input typu getchar, funkcje które dla pewnych argumentów wchodzą w nieskończoną pętlę).&lt;/p&gt;
+&lt;h3&gt;Propagacja błędów, wyjątki&lt;/h3&gt;
+&lt;p&gt;Funkcje czasem zwracają poprawny rezultat tylko dla pewnego podzbioru wszystkich możliwych argumentów. Jak sobie z tym radzić?
+W językach typu C można zwracać -1 czy null, ale to tylko hacki.
+W Haskellu można użyć Maybe. To pozwala na zwrócenie nowego, bogatszego typu z funkcji, która nie jest określona na całej dziedzinie. Ale zmienia sposób łączenia funkcji- inne funkcje teraz muszą obsługiwać Maybe. Powstaje kod składający się z kaskady instrukcji warunkowych. Jeśli dana instukcja nie jest spełniona, to kod w całej dalszej gałęzi jest omijany. Można go umieścić wewnątrz funkcji bind:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="n"&gt;bind&lt;/span&gt; &lt;span class="n"&gt;m&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt; &lt;span class="ow"&gt;=&lt;/span&gt;
+    &lt;span class="kr"&gt;case&lt;/span&gt; &lt;span class="n"&gt;m&lt;/span&gt; &lt;span class="kr"&gt;of&lt;/span&gt;
+      &lt;span class="kt"&gt;Nothing&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;Nothing&lt;/span&gt;
+      &lt;span class="kt"&gt;Just&lt;/span&gt; &lt;span class="n"&gt;n&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt; &lt;span class="n"&gt;n&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;W Haskellu bind jest reprezentowane przez infixowy operator &amp;gt;&amp;gt;= następująco:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&amp;gt;=&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="ow"&gt;::&lt;/span&gt; &lt;span class="kt"&gt;Maybe&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;Maybe&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;Maybe&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt;
+  &lt;span class="kt"&gt;Nothing&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&amp;gt;=&lt;/span&gt; &lt;span class="n"&gt;cont&lt;/span&gt; &lt;span class="ow"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;Nothing&lt;/span&gt;
+  &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;Just&lt;/span&gt; &lt;span class="n"&gt;v&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&amp;gt;=&lt;/span&gt; &lt;span class="n"&gt;cont&lt;/span&gt; &lt;span class="ow"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cont&lt;/span&gt; &lt;span class="n"&gt;v&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Słowo kluczowe return w Haskellu nie zwraca wyniku z funkcji, tylko opakowuje go w bogatszy typ: tutaj dla funkcji zwracającej a, return da Maybe a.&lt;/p&gt;
+&lt;h3&gt;Monada Maybe&lt;/h3&gt;
+&lt;p&gt;Zaczęliśmy od funkcji, która nie była funkcją z definicji- nie była zdefiniowana dla części swoich argumentów. Znaleźliśmy cwaną metodę, żeby zamienić ją w funkcję poprzez wzbogacenie zwracanego przez nią typu (to jest konstruktor typu, nazwijmy go M).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="n"&gt;f&lt;/span&gt; &lt;span class="ow"&gt;::&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;M&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Aby zdefiniować endofukntor, potrzeba jeszcze mapowania morfizmów. Dla każdej funkcji potrzebujemy jej odpowiednika działającego na rozszerzonych typach. Mapowanie funkcji można opisać poprzez funkcję wyższego rzędu: fmap.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="n"&gt;fmap&lt;/span&gt; &lt;span class="ow"&gt;::&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;M&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;M&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Zatem ogólna metoda bind musi w tym wypadku pobierać 2 argumenty: rezultat poprzeniej rozszerzonej funkcji oraz resztę obliczeń do wykonania.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="n"&gt;bind&lt;/span&gt; &lt;span class="ow"&gt;::&lt;/span&gt; &lt;span class="kt"&gt;M&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;M&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;M&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Potrzebujemy jeszcze jednej funkcji, return:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="n"&gt;return&lt;/span&gt; &lt;span class="ow"&gt;::&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;M&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Używając bind i return można podnieść każdą funckję f w g:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="n"&gt;f&lt;/span&gt; &lt;span class="ow"&gt;::&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt;
+  &lt;span class="n"&gt;g&lt;/span&gt; &lt;span class="ow"&gt;::&lt;/span&gt; &lt;span class="kt"&gt;M&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;M&lt;/span&gt; &lt;span class="n"&gt;b&lt;/span&gt;
+
+  &lt;span class="n"&gt;g&lt;/span&gt; &lt;span class="n"&gt;ma&lt;/span&gt; &lt;span class="ow"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ma&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&amp;gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;return&lt;/span&gt; &lt;span class="o"&gt;.&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Takie mapowanie f w g to fmap. Mamy funktor. Potrzeba jeszcze unit i join.
+Return to unit.&lt;/p&gt;
+&lt;p&gt;Join powinno mieć następującą sygnaturę:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="n"&gt;join&lt;/span&gt; &lt;span class="ow"&gt;::&lt;/span&gt; &lt;span class="kt"&gt;M&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;M&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;M&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Join powinno w tym przypadku mapować Just (Just v) na (Just v), a cokolwiek innego na Nothing.
+Jest jednak bardziej ogólna metoda definicji join z użyciem identyczności:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="n"&gt;id&lt;/span&gt; &lt;span class="ow"&gt;::&lt;/span&gt; &lt;span class="kt"&gt;M&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;M&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt;
+
+  &lt;span class="n"&gt;join&lt;/span&gt; &lt;span class="ow"&gt;::&lt;/span&gt; &lt;span class="kt"&gt;M&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;M&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;M&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt;
+  &lt;span class="n"&gt;join&lt;/span&gt; &lt;span class="n"&gt;mmx&lt;/span&gt; &lt;span class="ow"&gt;=&lt;/span&gt; &lt;span class="n"&gt;mmx&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&amp;gt;=&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Zatem Maybe razem z bind i return to monada w znaczeniu teorii kategorii. Ponadto każda trójka składająca się z konstruktora typu oraz funkcji bind i return definiuje monadę.&lt;/p&gt;
+&lt;h3&gt;Cukier składniowy&lt;/h3&gt;
+&lt;p&gt;Notacja "do".&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="n"&gt;compose&lt;/span&gt; &lt;span class="n"&gt;n&lt;/span&gt; &lt;span class="ow"&gt;=&lt;/span&gt;
+      &lt;span class="n"&gt;f&lt;/span&gt; &lt;span class="n"&gt;n&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&amp;gt;=&lt;/span&gt; &lt;span class="nf"&gt;\&lt;/span&gt;&lt;span class="n"&gt;n1&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt;
+          &lt;span class="n"&gt;g&lt;/span&gt; &lt;span class="n"&gt;n1&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&amp;gt;=&lt;/span&gt; &lt;span class="nf"&gt;\&lt;/span&gt;&lt;span class="n"&gt;n2&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt;
+              &lt;span class="n"&gt;h&lt;/span&gt; &lt;span class="n"&gt;n2&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&amp;gt;=&lt;/span&gt; &lt;span class="nf"&gt;\&lt;/span&gt;&lt;span class="n"&gt;n3&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt;
+                  &lt;span class="n"&gt;return&lt;/span&gt; &lt;span class="n"&gt;n3&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;jest równoważne:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="n"&gt;compose&lt;/span&gt; &lt;span class="n"&gt;n&lt;/span&gt; &lt;span class="ow"&gt;=&lt;/span&gt; &lt;span class="kr"&gt;do&lt;/span&gt;
+      &lt;span class="n"&gt;n1&lt;/span&gt; &lt;span class="ow"&gt;&amp;lt;-&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt; &lt;span class="n"&gt;n&lt;/span&gt;
+      &lt;span class="n"&gt;n2&lt;/span&gt; &lt;span class="ow"&gt;&amp;lt;-&lt;/span&gt; &lt;span class="n"&gt;g&lt;/span&gt; &lt;span class="n"&gt;n1&lt;/span&gt;
+      &lt;span class="n"&gt;n3&lt;/span&gt; &lt;span class="ow"&gt;&amp;lt;-&lt;/span&gt; &lt;span class="n"&gt;h&lt;/span&gt; &lt;span class="n"&gt;n2&lt;/span&gt;
+      &lt;span class="n"&gt;return&lt;/span&gt; &lt;span class="n"&gt;n3&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Teraz można pokusić się o znalezienie podobnego konceptu w innych językach, np. C++:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;compose&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Foo&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+  &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="k"&gt;auto&lt;/span&gt; &lt;span class="n"&gt;n1&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+      &lt;span class="k"&gt;auto&lt;/span&gt; &lt;span class="n"&gt;n2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;g&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n1&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+      &lt;span class="k"&gt;auto&lt;/span&gt; &lt;span class="n"&gt;n3&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;n2&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+      &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;n3&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+
+  &lt;span class="p"&gt;...&lt;/span&gt;
+
+  &lt;span class="k"&gt;try&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="n"&gt;compose&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pFoo&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+  &lt;span class="k"&gt;catch&lt;/span&gt;&lt;span class="p"&gt;(...)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="c1"&gt;// error handling&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;W C++ dostajemy identyczną funkcjonalność nie poprzez modyfikację zwracanego typu, ale poprzez rzucenie wyjątku!&lt;/p&gt;
+&lt;h3&gt;Monada listy - obliczenia niedeterministyczne&lt;/h3&gt;
+&lt;p&gt;Monadę listy zdefiniowaliśmy przez funktor i funkcje unit i join.
+Konstruktor typu dla funktora mapuje typ a w listę: [a], mapowanie funkcji realizowane jest za pomocą map poprzez aplikację funkcji do każdego elementu listy. Ponadto:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="n"&gt;unit&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="ow"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+  &lt;span class="n"&gt;join&lt;/span&gt; &lt;span class="ow"&gt;=&lt;/span&gt; &lt;span class="n"&gt;concat&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Co to ma wspólnego z obliczeniami niedeterministycznymi?
+Wyobraźmy sobie parsowanie niedeterministycznej gramatyki. Możemy otrzymać wiele alternatywnych drzew dla tego samego wejścia. Takie obliczenia można symulować za pomocą funkcji, która zwraca listę możliwych rezultatów. Typ zwracany przez deterministyczny parser (drzewo) jest rozszerzony (lista drzew).&lt;/p&gt;
+&lt;p&gt;Aby połączyć ze sobą funkcje, które zwracają listy, użyjemy bind w następującej postaci:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="n"&gt;bind&lt;/span&gt; &lt;span class="ow"&gt;::&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;b&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Bind bierze listę i kontynuację obliczeń, i tworzy nową listę. Jeśli zaaplikujemy kontynuację do każdego elementu wejściowej listy, dostaniemy [[b]]. Trzeba ją spłaszczyć.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="n"&gt;xs&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&amp;gt;=&lt;/span&gt; &lt;span class="n"&gt;cont&lt;/span&gt; &lt;span class="ow"&gt;=&lt;/span&gt; &lt;span class="n"&gt;concat&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;map&lt;/span&gt; &lt;span class="n"&gt;cont&lt;/span&gt; &lt;span class="n"&gt;xs&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt; ogólny przepis na monadę: &lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;wziąć konstruktor typu z funktora i nazwać fmap&lt;/li&gt;
+&lt;li&gt;zdefiniować bind jako:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;haskell
+    bind x f = join ((fmap f) x)&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;zdefiniować return jako unit&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Stan, funkcje, efekty uboczne&lt;/h2&gt;
+&lt;p&gt;W programowaniu funkcyjnym dane nie są mutowalne, żeby nie trzeba było synchronizować dostępu do nich. Dlatego obliczenia ze stanem w programowaniu funkcyjnym wymagają podania explicite stanu. Weźmy przykład z C++:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;pop&lt;/span&gt;&lt;span class="p"&gt;(){&lt;/span&gt;
+        &lt;span class="k"&gt;auto&lt;/span&gt; &lt;span class="n"&gt;v&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;glob&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;top&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt; &lt;span class="c1"&gt;//glob is the global vector&lt;/span&gt;
+        &lt;span class="n"&gt;glob&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pop&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;v&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;W Haskellu, wyglądałoby to następująco:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    &lt;span class="kr"&gt;newtype&lt;/span&gt; &lt;span class="kt"&gt;Stack&lt;/span&gt; &lt;span class="ow"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;ST&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;
+    &lt;span class="n"&gt;pop&lt;/span&gt;&lt;span class="ow"&gt;::&lt;/span&gt; &lt;span class="kt"&gt;Stack&lt;/span&gt;&lt;span class="ow"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;Stack&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;Int&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;pop&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;ST&lt;/span&gt; &lt;span class="n"&gt;lst&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="ow"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;ST&lt;/span&gt;  &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tail&lt;/span&gt; &lt;span class="n"&gt;lst&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;head&lt;/span&gt; &lt;span class="n"&gt;lst&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Takie funkcje, które biorą stan i zwracają stan i wynik, nazywane są w Haskellu akcjami. Są one jednak nienaturalne i niewygodne w użyciu w takiej postaci. Chcemy stworzyć coś na wyższym poziomie abstracji: będziemy pisać funkcje, które będą zwracać akcje. Takie funkcje nazywane są funkcjami monadycznymi.
+Będziemy dążyć do tego, żeby łączyć funkcje monadyczne ze sobą, i otrzymywać łączone akcje- taką akcję można wykonać na stanie i otrzymać wynik końcowy.&lt;/p&gt;
+&lt;h3&gt;Monada stanu&lt;/h3&gt;
+&lt;p&gt;Konstruktor typu: zaczynamy od obliczenia ze stanem, które jest typu &lt;em&gt;a -&amp;gt; b&lt;/em&gt;. Zmienimy go na funkcję monadyczną, która przyjmuje jako parametr &lt;em&gt;a&lt;/em&gt; i zwraca rozszerzony typ oparty na &lt;em&gt;b&lt;/em&gt; (który jest akcją, czyli funckcją &lt;em&gt;S -&amp;gt; (S, b)&lt;/em&gt;).&lt;/p&gt;
+&lt;h4&gt;Kalkulator monadyczny&lt;/h4&gt;
+&lt;p&gt;Dobrym przykładem oblczenia ze stanem jest kalkulator oparty na stosie.&lt;/p&gt;
+&lt;h2&gt;Podsumowanie&lt;/h2&gt;
+&lt;p&gt;Jest duża klasa problemów, które przeprowadzają wejście na wyjście w sposób niefunkcyjny. Część z nich można opisać jako funkcje o rozszerzonym wyjściu; rozszerzenie wyjścia można opisać jako konstruktor typu, który definiuje pierwszy komponent monady. Ponieważ obliczenia muszą być składalne, potrzebujemy metody składania rozszerzonych funkcji- to jest drugi komponent monady, bind. Musimy być w stanie tworzyć funkcje, które zwracają rozszerzony typ, i do tego potrzeba trzeciego elementu, return.&lt;/p&gt;</summary><category term="monads"></category><category term="haskell"></category><category term="programming"></category><category term="functional programming"></category></entry><entry><title>Where did TDD go wrong</title><link href="https://4gn3s.github.io/where-did-tdd-go-wrong.html" rel="alternate"></link><published>2016-09-06T18:00:00+02:00</published><author><name>Agnieszka Kramarek</name></author><id>tag:4gn3s.github.io,2016-09-06:where-did-tdd-go-wrong.html</id><summary type="html">&lt;p&gt;I have recently watched a very interesting talk given by Ian Cooper about the flaws of TDD. You can watch the whole talk &lt;a href="https://vimeo.com/68375232"&gt;here&lt;/a&gt;. Below are my notes taken while watching.&lt;/p&gt;
+&lt;h2&gt;Test behaviours, not implementations&lt;/h2&gt;
+&lt;h4&gt;A better TDD definition&lt;/h4&gt;
+&lt;p&gt;New piece of &lt;strong&gt;behaviour&lt;/strong&gt; means we should write a test&lt;/p&gt;
+&lt;h4&gt;What is a unit test?&lt;/h4&gt;
+&lt;p&gt;A unit test shouldn't have any side results; each test should run isolately from other tests. This does not mean that everything should be mocked out! Mocking out too much functionality creates over-implemented tests.&lt;/p&gt;
+&lt;h3&gt;When refactoring / changing internal implementation, no tests should fail.&lt;/h3&gt;
+&lt;h2&gt;Tips for writing awesome tests:&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Don't jump too early into implementation details&lt;/li&gt;
+&lt;li&gt;Only test the public (narrow) interface&lt;/li&gt;
+&lt;li&gt;Write tests against use-cases. Pros:&lt;ul&gt;
+&lt;li&gt;less tests&lt;/li&gt;
+&lt;li&gt;testing only core module functionality&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Give tests names which indicate what is being tested&lt;/li&gt;
+&lt;li&gt;Focus on making the test pass as quickly as you can. You can try to engineer it later&lt;/li&gt;
+&lt;li&gt;Don't mock the internals, privates and adapters&lt;/li&gt;
+&lt;li&gt;Mock other public interfaces and other ports&lt;/li&gt;
+&lt;li&gt;Use the builder pattern&lt;/li&gt;
+&lt;li&gt;Add integration tests to test port-adapter communication&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;A recommended development routine:&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;Write a test for new behaviour and make it fail&lt;/li&gt;
+&lt;li&gt;Make the test pass without much engineering or architectual work&lt;/li&gt;
+&lt;li&gt;Refactor and clean the code&lt;ul&gt;
+&lt;li&gt;Do &lt;strong&gt;NOT&lt;/strong&gt; write any more tests at this point! (they would be testing the implementation)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3&gt;The builder pattern&lt;/h3&gt;
+&lt;p&gt;Using builders in the tests makes tests concise and clean. A builder returns a well build (ready) object; to test some of it's properties, we can override them for particular tests.&lt;/p&gt;
+&lt;h4&gt;Software testing reversed ice cream cone&lt;/h4&gt;
+&lt;p&gt;&lt;img alt="Ice cream cone" src="https://4gn3s.github.io/images/tests.png" style="width: 640px; height: auto; max-width: 100%;"/&gt;&lt;/p&gt;</summary><category term="testing"></category><category term="TDD"></category><category term="programming"></category></entry></feed>

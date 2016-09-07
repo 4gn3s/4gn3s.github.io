@@ -10,6 +10,7 @@
 
     <link href="https://4gn3s.github.io/static/custom.css" rel="stylesheet">
 
+    <link href="https://4gn3s.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="4gn3s coding Atom">
 
 
     <link rel="shortcut icon" href="https://4gn3s.github.io/favicon.ico" type="image/x-icon">
@@ -59,6 +60,7 @@
         <li><a class="sc-facebook" href="https://www.facebook.com/agnieszka.kramarek" target="_blank"><i class="fa fa-facebook"></i></a></li>
         <li><a class="sc-github" href="https://github.com/4gn3s" target="_blank"><i class="fa fa-github"></i></a></li>
         <li><a class="sc-linkedin" href="" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+        <li><a class="sc-rss" href="/feeds/all.atom.xml" target="_blank"><i class="fa fa-rss"></i></a></li>
       </ul>
     </div>
   </aside>
@@ -68,6 +70,7 @@
       <a href="/archives.html">Archives</a>
       <a href="/categories.html">Categories</a>
       <a href="/tags.html">Tags</a>
+      <a href="https://4gn3s.github.io/feeds/all.atom.xml">Atom</a>
     </nav>
 
 <article>
@@ -75,14 +78,61 @@
     <h1 id="projects">Projects</h1>
   </header>
   <div>
-    <p><img alt="weather station" src="https://4gn3s.github.io/weatherStationCode/IMG_20150907_183407~2.jpg"/></p>
-<ul>
-<li><a href="https://4gn3s.github.io/weatherStationCode/">My weather station built using Raspberry Pi and a bunch of sensors</a></li>
+    <style>
+
+ul#project-list {
+  list-style-type: none;
+  margin-left: -40px;
+  width: 600px;
+}
+
+li.project-list-element {
+  padding: 10px;
+  overflow: auto;
+}
+
+li:hover.project-list-element {
+  background: #CCF5FE;
+  cursor: pointer;
+}
+
+li.project-list-element img {
+  float: left;
+  margin: 0 15px 0 0;
+}
+
+li.project-list-element h3 {
+  margin: 0 0 25px 0;
+}
+
+li.project-list-element img {
+  width: 150px;
+  height: 150px;
+}
+
+a.list-link {
+  color: inherit;
+}
+
+</style>
+<div>
+<ul id="project-list">
+<li class="project-list-element">
+<a class="list-link" href="https://4gn3s.github.io/weatherStationCode/">
+<img src="https://4gn3s.github.io/weatherStationCode/IMG_20150907_183407~2.jpg"/>
+<h3>WeatherPi</h3>
+<p>My weather station built using Raspberry Pi and a bunch of sensors</p>
+</a>
+</li>
+<li class="project-list-element">
+<a class="list-link" href="./mondrian.html">
+<img src="https://github.com/4gn3s/seam-carving/raw/master/static/smaller.gif"/>
+<h3>Seam carving</h3>
+<p>An implementation of seam carving algorithm, content aware resizing of images</p>
+</a>
+</li>
 </ul>
-<p><img alt="seam carving algorithm" src="https://github.com/4gn3s/seam-carving/raw/master/static/smaller.gif"/></p>
-<ul>
-<li><a href="https://github.com/4gn3s/seam-carving">An implementation of seam carving algorithm, content aware resizing of images</a></li>
-</ul>
+</div>
   </div>
 </article>
 
