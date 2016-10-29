@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,400italic' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" type="text/css" href="https://4gn3s.github.io/theme/stylesheet/style.min.css">
+
+  <link rel="stylesheet" type="text/css" href="https://4gn3s.github.io/theme/pygments/monokai.min.css">
+  <link rel="stylesheet" type="text/css" href="https://4gn3s.github.io/theme/font-awesome/css/font-awesome.min.css">
+
+    <link href="https://4gn3s.github.io/static/custom.css" rel="stylesheet">
+
+    <link href="https://4gn3s.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="4gn3s coding Atom">
+
+
+    <link rel="shortcut icon" href="https://4gn3s.github.io/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="https://4gn3s.github.io/favicon.ico" type="image/x-icon">
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index, follow" />
+
+    <!-- Chrome, Firefox OS and Opera -->
+    <meta name="theme-color" content="#333">
+    <!-- Windows Phone -->
+    <meta name="msapplication-navbutton-color" content="#333">
+    <!-- iOS Safari -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<meta name="author" content="Agnieszka Kramarek" />
+<meta name="description" content="Zero knowledge proofs are a powerful cryptographical concept, but they might be complex and hard to grasp at first. Let's start exploring the subject with a simple example, which I first read here. A classic example Imagine you are playing snooker with your color-blind friend and you want to ..." />
+<meta name="keywords" content="cryptography, zero-knowledge, snarks">
+<meta property="og:site_name" content="4gn3s coding"/>
+<meta property="og:title" content="Zero knowledge proofs"/>
+<meta property="og:description" content="Zero knowledge proofs are a powerful cryptographical concept, but they might be complex and hard to grasp at first. Let's start exploring the subject with a simple example, which I first read here. A classic example Imagine you are playing snooker with your color-blind friend and you want to ..."/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://4gn3s.github.io/zero-knowledge-proofs.html"/>
+<meta property="og:type" content="article"/>
+<meta property="article:published_time" content="2016-10-29 10:00:00+02:00"/>
+<meta property="article:modified_time" content=""/>
+<meta property="article:author" content="https://4gn3s.github.io/author/agnieszka-kramarek.html">
+<meta property="article:section" content="Programming articles"/>
+<meta property="article:tag" content="cryptography"/>
+<meta property="article:tag" content="zero-knowledge"/>
+<meta property="article:tag" content="snarks"/>
+<meta property="og:image" content="https://4gn3s.github.io/images/profile.png">
+  <title>4gn3s coding &ndash; Zero knowledge proofs</title>
+</head>
+<body>
+  <aside>
+    <div>
+      <a href="https://4gn3s.github.io">
+        <img src="https://4gn3s.github.io/images/profile.png" alt="" title="">
+      </a>
+      <h1><a href="https://4gn3s.github.io"></a></h1>
+<p>Programming adventures of a girl</p>      <nav>
+        <ul class="list">
+          <li><a href="https://4gn3s.github.io/pages/about.html#about">About</a></li>
+          <li><a href="https://4gn3s.github.io/pages/contact.html#contact">Contact</a></li>
+          <li><a href="https://4gn3s.github.io/pages/projects.html#projects">Projects</a></li>
+        </ul>
+      </nav>
+      <ul class="social">
+        <li><a class="sc-facebook" href="https://www.facebook.com/agnieszka.kramarek" target="_blank"><i class="fa fa-facebook"></i></a></li>
+        <li><a class="sc-github" href="https://github.com/4gn3s" target="_blank"><i class="fa fa-github"></i></a></li>
+        <li><a class="sc-linkedin" href="" target="_blank"><i class="fa fa-linkedin"></i></a></li>
+        <li><a class="sc-rss" href="/feeds/all.atom.xml" target="_blank"><i class="fa fa-rss"></i></a></li>
+      </ul>
+    </div>
+  </aside>
+  <main>
+    <nav>
+      <a href="https://4gn3s.github.io">Home</a>
+      <a href="/archives.html">Archives</a>
+      <a href="/categories.html">Categories</a>
+      <a href="/tags.html">Tags</a>
+      <a href="https://4gn3s.github.io/feeds/all.atom.xml">Atom</a>
+    </nav>
+
+<article>
+  <header>
+    <h1 id="zero-knowledge-proofs">Zero knowledge proofs</h1>
+    <p>Posted on sob 29 październik 2016 in <a href="https://4gn3s.github.io/category/programming-articles.html">Programming articles</a></p>
+  </header>
+  <div>
+    <p>Zero knowledge proofs are a powerful cryptographical concept, but they might be complex and hard to grasp at first. Let's start exploring the subject with a simple example, which I first read <a href="http://mathoverflow.net/a/22628">here</a>.</p>
+<h2>A classic example</h2>
+<p>Imagine you are playing snooker with your color-blind friend and you want to prove to him that red and green billard balls are distinguishable to you. Since you get more points for sinking the green ball then the red ones, and you want to win with your friend (evil!), you don't want to reveal which ball is which; you just want to prove that the balls are differently-colored.</p>
+<p>The proof would go as follows: you give both balls to your friend, so that he is holding each in one hand. You can see in which hand he holds each of the balls, but you don't tell him which is which. Next, you ask the friend to put his both hands behind his back, and either switch the balls exactly once, or leave them be. When the friend shows you his hands again, you have to "guess" if he switched the balls or not. Notice that you don't reveal which ball is which- you just have to say whether he switched the balls or not.</p>
+<p>If the balls are identical, you have 1/2 chance to guess correctly what action was performed. Since you can just look at the colors, you can easily judge whether or not he switched them. Now this means that your friend is 1/2 certain that you are not lying (he remembers whether he switched the balls or not). To convince him further, you just have to repeat this "proof" multiple times in the row. If you repeat the proof <em>t</em> times, the probability that you successfully keep deceiving your friend drops significantly, to <em>(1/2)^t</em>. After 10 proofs, there is only <em>0.0009765625%</em> chance that you guessed correctly if the balls are identical.</p>
+<p>This proof is <strong>zero knowledge</strong>: you never reveal which ball is which, and your friend never learns how to distinguish the balls. This proof is also <strong>interactive</strong>: you repeat this procedure multiple times to raise the probability of truthfulness.</p>
+<p>What would be an analogical non-zero-knowledge proof? You can place different labels on both balls. Your friend would show you either of the balls concealing the label and ask you which label it must have. Again, if the process is repeated, your friend gains confidence that there is a difference other than the labels in the balls which he can't percieve.</p>
+<h2>A more complex (and more mathematical) example</h2>
+<p>In this example, let's consider the problem of graph isomorphism. We are given two graphs <em>G1</em> and <em>G2</em> and want to check if they are the same after "disentangling" the edges. Mathematically, let's assume that a graph <em>G</em> has <em>n</em> vertices and a list of edges, where each edge <em>(u, v)</em> is defined by a pair of vertice indexes. Graphs <em>G1</em> and <em>G2</em> are isomorphic if there exists a permutation <em>P</em> of numbers <em>{1, 2, .., n}</em> such that for each edge <em>(u, v)</em> from <em>G1</em> there exists an edge <em>(P(u), P(v))</em> in <em>G2</em>. We don't know a polynomial time algorithm that <a href="https://en.wikipedia.org/wiki/Graph_isomorphism_problem">solves this problem</a>.</p>
+<ul>
+<li>To be continued ... *</li>
+</ul>
+  </div>
+  <div class="tag-cloud">
+    <p>
+      <a href="https://4gn3s.github.io/tag/cryptography.html">cryptography</a>
+      <a href="https://4gn3s.github.io/tag/zero-knowledge.html">zero-knowledge</a>
+      <a href="https://4gn3s.github.io/tag/snarks.html">snarks</a>
+    </p>
+  </div>
+</article>
+
+    <footer>
+        <p>&copy; Agnieszka Kramarek </p>
+<p>Built using <a href="http://getpelican.com" target="_blank">Pelican</a> - <a href="https://github.com/alexandrevicenzi/flex" target="_blank">Flex</a> theme by <a href="http://alexandrevicenzi.com" target="_blank">Alexandre Vicenzi</a></p>    </footer>
+  </main>
+
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context" : "http://schema.org",
+  "@type" : "Blog",
+  "name": " 4gn3s coding ",
+  "url" : "https://4gn3s.github.io",
+  "image": "https://4gn3s.github.io/images/profile.png",
+  "description": ""
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "BlogPosting",
+  "name": "Zero knowledge proofs",
+  "headline": "Zero knowledge proofs",
+  "datePublished": "2016-10-29 10:00:00+02:00",
+  "dateModified": "",
+  "author": {
+    "@type": "Person",
+    "name": "Agnieszka Kramarek",
+    "url": "https://4gn3s.github.io/author/agnieszka-kramarek.html"
+  },
+  "image": "https://4gn3s.github.io/images/profile.png",
+  "url": "https://4gn3s.github.io/zero-knowledge-proofs.html",
+  "description": "Zero knowledge proofs are a powerful cryptographical concept, but they might be complex and hard to grasp at first. Let's start exploring the subject with a simple example, which I first read here. A classic example Imagine you are playing snooker with your color-blind friend and you want to ..."
+}
+</script></body>
+</html>
